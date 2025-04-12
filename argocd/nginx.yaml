@@ -13,8 +13,10 @@ spec:
     targetRevision: main
     path: charts/nginx
     helm:
-      valueFiles:
-        - values.yaml
+      values: |
+        service:
+          type: LoadBalancer
+        replicaCount: 2
   syncPolicy:
     automated:
       prune: true
