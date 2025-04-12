@@ -136,3 +136,83 @@ Verify cluster status:
 ```sh
 kubectl get nodes
 ```
+
+---
+
+## **2. Installing and Configuring ArgoCD**
+
+Now that our GKE cluster is up and running inside a secure VPC, it’s time to introduce ArgoCD — the heart of our GitOps workflow.
+
+### **2.1. Install ArgoCD**
+
+We’ll install ArgoCD into a separate namespace using the official Kubernetes manifests provided by the ArgoCD team:
+
+```sh
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
+
+This command:
+
+- Installs all ArgoCD components: API server, controller, repo-server, and UI
+- Sets up RBAC roles and required services
+- Starts watching the cluster for Git-sourced application configs
+
+### **2.2. Expose the ArgoCD Server**
+
+By default, the ArgoCD API server is only exposed internally within the cluster. We’ll expose it using a LoadBalancer service for easy access:
+
+```sh
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+```
+
+Now wait a minute or two and get the external IP:
+
+```sh
+kubectl get svc argocd-server -n argocd
+```
+
+Copy the `EXTERNAL-IP` value — that’s your ArgoCD dashboard URL (`https://EXTERNAL-IP`).
+
+### **2.3. Retrieve ArgoCD Admin Password**
+
+To log into the ArgoCD UI, you’ll need the admin password, which is stored as a Kubernetes secret:
+
+```sh
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+```
+
+Username: `admin`
+Password: (output from above)
+
+Open your browser, go to `https://EXTERNAL-IP`, and log in with these credentials.
+
+⚠️ Important: This is a default password. For production, you must change it immediately or integrate ArgoCD with an identity provider (e.g. Google, GitHub, SSO).
+
+Login via CLI:
+
+```sh
+argocd login <EXTERNAL-IP>
+```
+
+### **2.4. Connect ArgoCD to Your Git Repository**
+
+ArgoCD works by syncing applications defined in Git repos to your cluster. Let’s connect your GitHub repo next.
+
+Step 1: Add your Git repository
+Replace `YOUR_REPO_URL` with your actual repository URL:
+
+```bash
+argocd repo add https://github.com/YOUR_REPO_URL\
+ --username your-username \
+ --password your-password
+```
+
+Or, if you're using SSH:
+
+```bash
+argocd repo add git@github.com:YOUR_USER/YOUR_REPO.git \
+ --ssh-private-key-path ~/.ssh/id_rsa
+```
+
+💡 You can also do this via the UI under Settings > Repositories.
