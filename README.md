@@ -216,3 +216,94 @@ argocd repo add git@github.com:YOUR_USER/YOUR_REPO.git \
 ```
 
 💡 You can also do this via the UI under Settings > Repositories.
+
+---
+
+## **3. Setting Up GitOps with Helm**
+
+Now that ArgoCD is installed and connected to your Git repository, it’s time for the real magic — deploying applications using Helm charts, the GitOps way.
+
+In this step, we’ll create a sample application, define its configuration in Git, and let ArgoCD take care of deploying and maintaining it in your GKE cluster.
+
+### **3.1. Define Git Repository Structure**
+
+For this example, we’ll use a default NGINX Helm chart. If you don’t have this already, let’s generate it:
+
+```bash
+helm create nginx
+```
+
+It should create the basic structure of a Helm chart
+
+```
+charts/
+├── nginx/
+│   ├── Chart.yaml
+│   ├── values.yaml
+│   ├── templates/
+│       ├── deployment.yaml
+│       ├── service.yaml
+            ...
+```
+
+Commit this directory into your Git repository.
+
+### **3.2. Define ArgoCD Application Manifest**
+
+This is how you tell ArgoCD, “Please watch this path in Git and keep the cluster in sync.”
+
+Create a file in your repo at `argocd/nginx.yaml`:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    namespace: nginx
+    server: https://kubernetes.default.svc
+  source:
+    repoURL: https://github.com/your-org/gitops-repo.git
+    targetRevision: main
+    path: charts/nginx
+    helm:
+      values: |
+        service:
+          type: LoadBalancer
+        replicaCount: 2
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+```
+
+Once the manifest is ready, push it to your main branch.
+
+If you’re using an **App of Apps** pattern, ArgoCD will pick it up automatically. If not, apply it manually:
+
+```bash
+kubectl apply -f apps/nginx/argocd-app.yaml
+```
+
+Then check it in ArgoCD:
+
+```bash
+argocd app get nginx
+```
+
+Within a minute, you should see the NGINX deployment go live in the nginx namespace.
+
+---
+
+## **Conclusion**
+
+We successfully implemented **GitOps with ArgoCD and Helm** on **Google Kubernetes Engine (GKE)**, enabling:
+
+- **Automated deployments** from Git.
+- **Rollback and history tracking** using Git commits.
+- **Self-healing infrastructure** through ArgoCD sync policies.
+
+This setup is **scalable** and can be extended with **progressive delivery (Canary, Blue-Green), security policies, and secrets management (Vault)**.

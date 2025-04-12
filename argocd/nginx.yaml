@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    namespace: nginx
+    server: https://kubernetes.default.svc
+  source:
+    repoURL: https://github.com/leonidpetrosian/k8s-argo-example
+    targetRevision: main
+    path: charts/nginx
+    helm:
+      values: |
+        service:
+          type: LoadBalancer
+        replicaCount: 2
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
