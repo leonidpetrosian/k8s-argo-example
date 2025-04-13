@@ -285,7 +285,7 @@ Once the manifest is ready, push it to your main branch.
 If you’re using an **App of Apps** pattern, ArgoCD will pick it up automatically. If not, apply it manually:
 
 ```bash
-kubectl apply -f apps/nginx/argocd-app.yaml
+kubectl apply -f argocd/nginx.yaml
 ```
 
 Then check it in ArgoCD:
