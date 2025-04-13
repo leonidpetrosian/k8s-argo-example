@@ -1,5 +1,7 @@
 # **Kubernetes GitOps Deployment with ArgoCD and Helm on GCP**
 
+![](./img/tf-k8s-argo-git.png)
+
 ## **Introduction: Why GitOps?**
 
 As modern applications grow in complexity, managing Kubernetes deployments manually becomes a challenge. Traditional deployment strategies often rely on imperative commands (`kubectl apply`, `helm install`), which can lead to:
@@ -174,6 +176,8 @@ kubectl get svc argocd-server -n argocd
 
 Copy the `EXTERNAL-IP` value — that’s your ArgoCD dashboard URL (`https://EXTERNAL-IP`).
 
+![Argo CD Login Page](./img/argo-login.png)
+
 ### **2.3. Retrieve ArgoCD Admin Password**
 
 To log into the ArgoCD UI, you’ll need the admin password, which is stored as a Kubernetes secret:
@@ -295,6 +299,8 @@ argocd app get nginx
 ```
 
 Within a minute, you should see the NGINX deployment go live in the nginx namespace.
+
+![NGINX deployment](./img/nginx-deployment.png)
 
 ---
 
